@@ -1,0 +1,39 @@
+name: UAP Archive - files poster
+
+on:
+  workflow_dispatch: {}
+  # NOTE: no schedule yet - manual-trigger only until we've confirmed
+  # war.gov's bot protection doesn't block GitHub-runner IP ranges.
+  # If the test run succeeds, add a schedule block here (e.g. daily)
+  # matching the old launchd cadence.
+
+permissions:
+  contents: write
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Playwright + real Chrome
+        run: |
+          pip install playwright
+          playwright install --with-deps chrome
+
+      - name: Run files poster
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: python3 uap_files.py
+
+      - name: Commit updated dedupe state
+        run: |
+          git config user.name "uap-archive-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add seen_files.json
+          git diff --cached --quiet || git commit -m "chore: update files seen-cache [skip ci]"
+          git push

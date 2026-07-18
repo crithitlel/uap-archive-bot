@@ -1,0 +1,34 @@
+name: UAP Archive - coverage poster
+
+on:
+  schedule:
+    # 09:10 and 21:10 UTC - matches the old launchd cadence (2x/day)
+    - cron: "10 9 * * *"
+    - cron: "10 21 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run coverage poster
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: python3 uap_coverage.py
+
+      - name: Commit updated dedupe state
+        run: |
+          git config user.name "uap-archive-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add seen_coverage.json
+          git diff --cached --quiet || git commit -m "chore: update coverage seen-cache [skip ci]"
+          git push
