@@ -1,11 +1,15 @@
 name: UAP Archive - files poster
 
 on:
+  schedule:
+    # Confirmed 2026-07-18: GitHub-runner IPs are NOT blocked by war.gov's
+    # bot protection (real Chrome via Playwright is what matters). Runs
+    # 3x/day - new tranches drop every few weeks, so this just needs to
+    # catch a fresh release within hours, not race a live event.
+    - cron: "20 6 * * *"
+    - cron: "20 14 * * *"
+    - cron: "20 22 * * *"
   workflow_dispatch: {}
-  # NOTE: no schedule yet - manual-trigger only until we've confirmed
-  # war.gov's bot protection doesn't block GitHub-runner IP ranges.
-  # If the test run succeeds, add a schedule block here (e.g. daily)
-  # matching the old launchd cadence.
 
 permissions:
   contents: write
